@@ -1,2 +1,8 @@
 # cryomlt
 Compensating for penetration in radar altimetry cryosphere elevation estimates using deep learning
+
+## Background
+Radar altimetry is commonly used for monitoring changes within the cryosphere and its contribution to sea-level rise. Recent advances in the Swath altimetry processes using the interferometric mode of CryoSat-2, have enabled fine 500m spatial resolution surface elevation models from each satellite pass. However, there is variability in radar elevation estimates, often due to the penetration of radar waves into snow and firn, yielding differences compared to local airborne LiDAR altimeters which are less impacted by penetration. While neural networks are increasingly being used in a wide variety of domains to enhance predictions and detect changes, they have not previously been applied to radar altimetry to correct for elevation biases. In this study, we present a novel approach to adjusting for elevation bias by creating a neural network that predicts the elevation provided by local airborne LiDAR from CryoSat-2 radar elevation data where both data are available and then apply that model where only radar data are present. We investigate the challenges with building such models and review the variety of configurations and considerations. Finally, we present two proof of concepts that show good spatial and temporal transfer ability and compensate for 70-90% of the mean penetration, while reducing the root mean squared error by 10-17%. 
+
+## Description
+All code including the code description is available in the code subfolder. Furthermore, there are Env and Config folders which is useful for setup.
