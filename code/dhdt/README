@@ -1,0 +1,115 @@
+dhdt is a python suite of tools that extracts elevation and the rate of 
+elevation change to point satellite observations. The code uses pandas and 
+geopandas as internal data structures and produce netCDF files for output.
+
+Running dhdtPy
+--------------
+There are four stages:
+1. createOutDirs
+Run this program to create the output directory structure. The tiles are stored
+in a directory structure to avoid having too many files in a single directory.
+The directory name is inferred by converting the tile number into a hexa-
+decimal number, dropping the last digit and inserting slashes between the
+remaining hex digits, eg tile 100000 (0x186a0) would be stored in directory
+1/8/6/a/.
+2. readData
+The readData program reads the input database spread over a number of files and 
+produces a temporary DB using pandas HDF5 file store.
+3a. processData
+Each tile is processed separately. Only the data relevant for this tile is read 
+and stored in memory as a geopandas dataframe. The data are projected and fitted
+for each pixel in the output grid. Results are stored in a numbered netCDF tile.
+3b. processDataTF
+Process all tiles using a MPI task farm.
+4. mergeData
+Load all tiles and produce a final netCDF file.
+5. checkData
+Run checkData to get a list of failed tiles.
+
+You can do all four steps by running
+dhdt
+This program will use all available cores on the system unless you specify the 
+number of processes using the -n option.
+
+All programs are configured using a configuration file. The configuration can be
+tested by running
+python dhdt/config.py example.cfg
+This will show all configuration items including the default values. The number 
+of tiles (ie the number of processors) need to be specified in the configuration
+file. You can plot the tiles using
+python dhdt/grid.py example.cfg  -l -126.0004167 71.9998167 \
+    -u -59.9997167 84.0004167
+The option -l and -u can be used to increase the displayed map area.
+
+You can also submit the tasks to the eddie compute cluster using the -s option. 
+Required runtime and memory can be set using the -t and -m options.
+
+Using a cluster
+---------------
+All dhdt programs can be scheduled to run on a gridengine controlled cluster using
+the -s script. dhdt will submit a job to read the data an array job to
+compute the tiles and finally a job to merge all tiles. The array job gets split up if
+there are more tiles than the maximum size of an array job. Sometimes computation for
+a tile will fail if the job runs out of resources (memory or runtime). You can
+resubmit the failed tiles by running dhdt again with increased memory (-m) or runtime
+(-t). Only the failed tiles will get recomputed.
+
+Monitoring Memory and CPU usage
+-------------------------------
+The memory usage depends on the tile size and the maximum number of data points 
+used for computing each pixel. You can monitor resource usage by running dhdt or
+processData with the --monitor-memory. This produces a memory trace file for each 
+tile with the same prefix at the output files. You can then plot resource usage 
+using plotdhdtMem.
+
+Installation
+------------
+On eddie3 the easiest way to install dhdtPy is to use a virtual anaconda python
+environment:
+1. load the anaconda module (always required)
+module load anaconda
+
+2. setup where anaconda environments go (required once only)
+conda config --add envs_dirs /exports/csce/eddie/geos/groups/..../condaenvs
+
+3. setup conda virtual environment (required once for each environment)
+   you might want to use a stable and a testing environment
+conda env create  -f dhdtPyconda.yml -n dhdtPy-dev
+
+4. activate the conda environment (always required)
+source activate dhdtPy-dev
+
+5. update qsub/qsub_dhdt.sh
+to reflect the name of the conda environment, eg in the example above, on line 24
+source activate dhdtPy-dev
+
+6. install dhdtPy (required when the code has changed)
+python setup.py install
+python setup.py install_data
+
+Installation and Setup on archer
+--------------------------------
+On archer we are also using the anaconda environment to provide most of the 
+required python packages. 
+
+The following modules need to be loaded:
+module load anaconda-compute
+module swap PrgEnv-cray PrgEnv-gnu
+module load cray-mpich
+
+Tell conda where to find conda enviornments (you need to do this once)
+conda config --add envs_dirs /work/d43/d43-gourmelen/shared/condaenvs
+
+Create a new conda environment, eg dhdtPy-test
+conda env create -n dhdtPy-test -f dhdtPyconda.yml
+
+and use it
+source activate dhdtPy-test
+
+You need to install mpi4py manually using pip so that it picks up the correct
+compiler and MPI implementation:
+env MPICC=cc  pip install mpi4py --no-cache-dir
+
+Once installed, you can run the dhdt suite of programs as before, using -s pbs.
+On archer you should use the taskfarm implementation for processing the tiles, 
+ie dhdt with the -T option. The number of process should be devisible by 24.

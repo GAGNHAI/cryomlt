@@ -1,0 +1,20 @@
+name: dhdtPy
+channels:
+ - conda-forge
+dependencies:
+ - python=2.7
+ - pandas
+# - geopandas
+# - netCDF4
+ - configobj
+ - scipy
+ - basemap
+ - numpy
+ - fiona
+ - shapely
+ - PyTables
+ - psutil
+ - dask
+ - pip: 
+   - geopandas
+   - netCDF4
