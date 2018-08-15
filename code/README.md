@@ -1,4 +1,4 @@
-# CryoMLT process un order
+# CryoMLT process in order
 
 ### 1) createSharedStores.py
 - Converts matlab and csvn files to h5
